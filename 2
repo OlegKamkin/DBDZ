@@ -1,0 +1,19 @@
+№1
+SELECT st.name, st.surname, st.score
+FROM students st
+WHERE score>=4 AND score<=4.5
+
+SELECT st.name, st.surname, st.score
+FROM students st
+WHERE score BETWEEN 4 AND 4.5
+
+№2
+SELECT st.name, st.surname, st.n_group
+FROM students st
+WHERE CAST (st.n_group AS varchar) LIKE '4%'
+
+№3
+SELECT st.name, st.surname, st.n_group
+FROM students st
+ORDER BY st.n_group DESC, st.name ASC
+
