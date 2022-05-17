@@ -17,3 +17,54 @@ SELECT st.name, st.surname, st.n_group
 FROM students st
 ORDER BY st.n_group DESC, st.name ASC
 
+№4
+SELECT st.name, st.surname, st.score
+FROM student st
+WHERE st.score>=4
+ORDER BY st.score DESC
+
+№5.
+SELECT h.name, h.risk
+FROM hobby h
+WHERE name='Футбол' OR name='Хоккей'
+
+№6
+SELECT sh.student_id, sh.hobby_id
+FROM student_hobby sh
+WHERE (started_at BETWEEN '2002-12-12' AND '2003-12-12') AND (finished_at IS NULL)
+
+№7.
+SELECT st.name, st.surname, st.score
+FROM student st
+WHERE score>=4.5
+ORDER BY st.score DESC
+
+№8
+SELECT st.name, st.surname, st.score
+FROM student st
+WHERE score>=4.5
+ORDER BY st.score DESC
+LIMIT 5
+
+№9.
+risk<2 (very low)
+2<=risk<4 (low)
+4<=risk<8 (medium)
+6<=risk<8 (high)
+risk>=8 (very high)
+
+SELECT h.name,
+	CASE
+	 WHEN risk < 2 THEN 'very low'
+   WHEN risk >= 2 AND risk <4 THEN 'low'
+   WHEN risk >= 4 AND risk <6 THEN 'medium'
+   WHEN risk >= 6 AND risk <8 THEN 'high'
+   WHEN risk >= 8 THEN 'very high'
+	END
+FROM hobby h
+
+№10
+SELECT h.name, h.risk
+FROM hobby h
+ORDER BY h.risk DESC
+LIMIT 3
