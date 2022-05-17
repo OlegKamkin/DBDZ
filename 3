@@ -1,0 +1,73 @@
+№1
+
+SELECT st.n_group, count(*)
+FROM student st
+GROUP BY st.n_group
+
+№2
+SELECT st.n_group, max(score), avg(score)::real
+FROM student st
+GROUP BY st.n_group
+
+№3
+SELECT st.surname, count(surname)
+FROM student st
+GROUP BY st.surname
+
+№4
+SELECT st.birthday, count(*)
+FROM student st
+GROUP BY st.birthday
+
+№5
+SELECT substr(st.n_group::varchar,1,1) as n_group, avg(score)::real
+FROM student st
+GROUP BY st.n_group
+
+№6
+SELECT st.n_group, avg(st.score)
+FROM student st 
+WHERE substr(st.n_group::varchar,1,1)='4'
+GROUP BY st.n_group 
+ORDER BY avg(st.score) DESC
+LIMIT 1
+
+№7
+SELECT st.n_group, avg(st.score)
+FROM student st 
+GROUP BY st.n_group 
+HAVING avg(st.score)<=3.5
+ORDER BY avg(st.score) ASC
+
+№8
+SELECT st.n_group, count(*), max(score), avg(score), min(score)
+FROM student st 
+GROUP BY st.n_group 
+
+№9
+SELECT st.name, max(st.score)
+FROM student st 
+WHERE st.n_group=4032
+GROUP BY st.n_group, st.name
+ORDER BY max(st.score) DESC
+LIMIT 1
+SELECT st.n_group, st.name, st.score
+FROM student st 
+WHERE st.score in
+    (
+	SELECT max(st_pod.score)
+	FROM student st_pod
+	GROUP BY st_pod.n_group
+	)
+ORDER BY st.n_group DESC
+
+№10
+SELECT st.n_group, st.name, st.score
+FROM student st 
+WHERE st.score in
+    (
+	SELECT max(st_pod.score)
+	FROM student st_pod
+	GROUP BY st_pod.n_group
+	)
+ORDER BY st.n_group DESC
