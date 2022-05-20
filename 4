@@ -1,0 +1,220 @@
+№1
+SELECT st.name, st.surname, pod.name
+FROM student st,
+	(
+	SELECT *
+	FROM student_hobby st_h
+	INNER JOIN hobby h on st_h.hobby_id=h.id
+	) pod
+WHERE st.id = pod.student_id
+
+№2
+SELECT st.id, st.name, st.surname, st.address, st.n_group, st.score, st.birthday
+FROM student st, (
+	SELECT st_h.student_id , st_h.finished_at - st_h.started_at as time_difference
+	FROM student_hobby st_h
+	WHERE st_h.finished_at - st_h.started_at IS NOT NULL
+	ORDER BY time_difference DESC
+	LIMIT 1
+	) pod
+WHERE st.id=pod.student_id
+
+№3
+SELECT pod2.id, pod2.name, pod2.surname, pod2.n_zachet, pod2.birthday
+FROM (
+	SELECT st.id ,st.name, st.surname, st.n_zachet, st.birthday
+	FROM student st
+	WHERE st.score > (
+	SELECT AVG(st.score)
+	FROM student st
+	)
+) pod2
+INNER JOIN (
+	SELECT pod1.student_id, SUM(pod1.risk)
+	FROM(
+		SELECT st_h.student_id, h.name, h.risk
+		FROM student_hobby st_h
+		INNER JOIN hobby h on st_h.hobby_id=h.id
+	) pod1
+	GROUP BY pod1.student_id
+	HAVING SUM(pod1.risk)>9
+) pod1 on pod1.student_id=pod2.id
+
+№4
+SELECT st.name, st.surname, st.n_zachet, st.birthday, pod.name, pod.months
+FROM student st, (
+	SELECT st_h.student_id, h.name, 12 * extract(year from age(st_h.finished_at, st_h.started_at)) as months
+	FROM hobby h
+	INNER JOIN student_hobby st_h on h.id=st_h.hobby_id
+	WHERE st_h.finished_at IS NOT NULL
+) pod
+WHERE st.id=pod.student_id
+
+
+№5
+SELECT st.surname, st.name, st.n_zachet, st.birthday
+FROM student st, (
+	SELECT st_h.student_id, COUNT(st_h.hobby_id)
+	FROM student_hobby st_h
+	GROUP BY st_h.student_id 
+	HAVING COUNT(st_h.hobby_id) > 1
+) pod
+WHERE st.id=pod.student_id AND st.birthday < '1982-01-01'
+
+
+№6
+SELECT st.n_group, AVG(st.score)
+FROM student st
+INNER JOIN(
+	SELECT st_h.student_id, COUNT(st_h.hobby_id)
+	FROM student_hobby st_h
+	GROUP BY st_h.student_id 
+	HAVING COUNT(st_h.hobby_id) >= 1
+) pod on pod.student_id=st.id
+GROUP BY n_group 
+
+№7
+SELECT h.name, h.risk, pod.months, pod.n_zachet 
+FROM hobby h
+INNER JOIN (
+	SELECT pod.hobby_id , st.id, st.n_zachet, pod.months
+	FROM student st, (
+		SELECT st_h.hobby_id ,st_h.student_id, 12 * extract(year from age('2021-01-01', st_h.started_at)) as months
+		FROM student_hobby st_h
+		WHERE st_h.finished_at IS NULL
+		ORDER BY months DESC
+		LIMIT 1
+	) pod
+	WHERE st.id=pod.student_id
+) pod on pod.hobby_id = h.id
+
+№8
+SELECT st.name, pod.id
+FROM student st, (
+	SELECT st.name, st_h.hobby_id 
+	FROM student st
+	INNER JOIN student_hobby st_h ON st.id=st_h.student_id
+) pod
+WHERE st.score = (SELECT MAX(student.score) FROM student) AND st.name=pod.name
+
+№9
+SELECT st_h.hobby_id
+FROM student_hobby st_h, (
+	SELECT st.id, st.score
+	FROM student st
+	WHERE (st.score<3.5 AND st.score>=2.5) AND substr(st.n_group::varchar,1,1)='2'
+) pod
+WHERE pod.id=st_h.student_id AND st_h.finished_at IS NULL
+
+№10
+SELECT substr(st.n_group::varchar,1,1) as n_kursa
+FROM student st, (
+	SELECT st_h.student_id, COUNT(st_h.hobby_id)
+	FROM student_hobby st_h
+	GROUP BY st_h.student_id
+	HAVING COUNT(st_h.hobby_id)>1
+) pod
+GROUP BY st.id
+HAVING COUNT(pod.student_id)/COUNT(st.id)>0.5
+
+№11
+SELECT pod.n_group
+FROM (
+	SELECT st.n_group, COUNT(st.score) total_score, COUNT(st.score) FILTER (WHERE st.score>=4) sub_score
+	FROM student st 
+	GROUP BY st.n_group
+	) pod
+GROUP BY pod.n_group
+HAVING SUM(sub_score)/SUM(total_score) > 0.6
+
+№12
+SELECT substr(st.n_group::varchar,1,1), COUNT(pod.hobby_count_each_student)
+FROM student st
+INNER JOIN (
+	SELECT st_h.student_id, COUNT(st_h.hobby_id) hobby_count_each_student
+	FROM student_hobby st_h
+	WHERE st_h.finished_at IS NULL
+	GROUP BY st_h.student_id
+) pod on pod.student_id=st.id
+GROUP BY substr(st.n_group::varchar,1,1)
+
+№13
+SELECT st.n_zachet, st.surname, st.name, st.birthday, substr(st.n_group::varchar,1,1) kurs_number
+FROM student st, (
+	SELECT *
+	FROM student_hobby st_h
+	WHERE st_h.hobby_id IS NULL
+) pod
+WHERE st.score>=4.5 AND pod.student_id=st.id
+
+№14
+CREATE OR REPLACE VIEW student_V1 AS
+SELECT st.*
+FROM student st, (
+	SELECT st_h.student_id, age(NOW(), st_h.started_at)
+	FROM student_hobby st_h
+	WHERE st_h.finished_at IS NULL AND EXTRACT(YEAR FROM age(NOW(), st_h.started_at)) >= 5
+) pod
+WHERE pod.student_id=st.id
+
+№15
+SELECT st_h.hobby_id, COUNT(st_h.student_id)
+FROM student_hobby st_h
+GROUP BY hobby_id
+
+№16
+SELECT st_h.hobby_id
+FROM student_hobby st_h
+GROUP BY hobby_id
+ORDER BY COUNT(st_h.student_id) DESC
+LIMIT 1
+
+№17
+SELECT st.*
+FROM student_hobby st_h
+INNER JOIN student st ON st.id = st_h.student_id
+WHERE st_h.hobby_id = (
+	SELECT st_h.hobby_id 
+	FROM student_hobby st_h
+	GROUP BY hobby_id
+	ORDER BY COUNT(st_h.student_id) DESC
+	LIMIT 1
+)
+
+№18
+SELECT h.id
+FROM hobby h
+ORDER BY h.risk DESC
+LIMIT 3
+
+№19
+SELECT st_h.student_id
+FROM student_hobby st_h
+ORDER BY age(st_h.finished_at, st_h.started_at) DESC
+LIMIT 10
+
+№20
+SELECT DISTINCT st.n_group
+FROM student st, (
+	SELECT st_h.student_id
+	FROM student_hobby st_h
+	ORDER BY age(st_h.finished_at, st_h.started_at) DESC
+	LIMIT 10
+) pod
+WHERE st.id = pod.student_id
+
+№21
+CREATE OR REPLACE VIEW student_V2 AS
+SELECT st.n_zachet, st.name, st.surname
+FROM student st
+ORDER BY st.score DESC
+ 
+lines (23 sloc)  1.27 KB
+   
+№22
+CREATE OR REPLACE VIEW kours_most_popular AS
+SELECT DISTINCT ON (1) substr(st.n_group::varchar,1,1), COUNT(st_h.hobby_id) hobby_count, st_h.hobby_id
+FROM student st
+INNER JOIN student_hobby st_h ON st_h.student_id=st.id
+GROUP BY substr(st.n_group::varchar,1,1), st_h.hobby_id
+ORDER BY substr(st.n_group::varchar,1,1) DESC, hobby_count DESC
