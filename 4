@@ -218,3 +218,117 @@ FROM student st
 INNER JOIN student_hobby st_h ON st_h.student_id=st.id
 GROUP BY substr(st.n_group::varchar,1,1), st_h.hobby_id
 ORDER BY substr(st.n_group::varchar,1,1) DESC, hobby_count DESC
+
+№24
+CREATE OR REPLACE VIEW student_and_5 AS
+SELECT substr(st.n_group::varchar,1,1), COUNT(st.id), COUNT(st.id) FILTER (WHERE st.score >= 4.5) count_score_5
+FROM student st
+GROUP BY substr(st.n_group::varchar,1,1)
+
+№25
+CREATE OR REPLACE VIEW most_popular_hobby AS
+SELECT st_h.hobby_id
+FROM student_hobby st_h
+GROUP BY hobby_id
+ORDER BY COUNT(st_h.student_id) DESC
+LIMIT 1
+
+№26
+CREATE OR REPLACE VIEW updatable_table AS
+SELECT st.*
+FROM student st
+
+№27
+SELECT substr(st.name::varchar,1,1), MAX(st.score), AVG(st.score), MIN(st.score)
+FROM student st
+GROUP BY substr(st.name::varchar,1,1)
+HAVING MAX(st.score)>3.6
+
+№28
+SELECT substr(st.n_group::varchar,1,1), st.surname, MIN(st.score), MAX(st.score)
+FROM student st
+GROUP BY substr(st.n_group::varchar,1,1), st.surname
+ORDER BY substr(st.n_group::varchar,1,1) DESC
+
+№29
+SELECT st.birthday, COUNT(st_h.hobby_id)
+FROM student st
+INNER JOIN student_hobby st_h ON st_h.student_id=st.id
+GROUP BY st.birthday
+
+№30
+SELECT LEFT(st.name,1), MAX(pod.risk), MIN(pod.risk)
+FROM student st, (
+	SELECT *
+	FROM student_hobby st_h
+	INNER JOIN hobby h ON h.id = st_h.hobby_id
+) pod
+WHERE st.id = pod.student_id
+GROUP BY LEFT(st.name,1)
+
+№31
+--to_char(st.birthday, 'Month')
+SELECT to_char(pod.birthday, 'Month'), AVG(pod.score)
+FROM hobby h, (
+	SELECT *
+	FROM student st
+	INNER JOIN student_hobby st_h ON st.id = st_h.student_id
+) pod
+WHERE h.id = pod.hobby_id AND h.name='Футбол'
+GROUP BY to_char(pod.birthday, 'Month')
+
+№32
+SELECT st.name, st.surname, st.n_group
+FROM student st, (
+	SELECT st_h.student_id, COUNT(st_h.hobby_id)
+	FROM student_hobby st_h
+	GROUP BY st_h.student_id
+) pod
+WHERE pod.student_id = st.id
+
+№33
+SELECT st.surname, 
+	CASE
+		WHEN POSITION('ов' IN st.surname) = 0 THEN 'не найдено'
+		ELSE POSITION('ов' IN st.surname)::varchar
+	END
+FROM student st
+	
+№34
+SELECT rpad(st.surname,10,'#')
+FROM student st
+		
+№35
+SELECT TRIM(TRAILING '#' FROM rpad(st.surname,10,'#'))
+FROM student st
+
+№36
+SELECT '2018-05-01'::TIMESTAMP - '2018-04-01'::TIMESTAMP
+
+№37
+SELECT NOW()::DATE + (6-EXTRACT(DOW FROM NOW()))::INT
+
+№38
+SELECT EXTRACT(CENTURY FROM NOW()) vek, EXTRACT(WEEK FROM NOW()) weeks, EXTRACT(DOY FROM NOW()) days
+
+№39
+SELECT pod.name, pod.surname, h.name, pod.hobby_status
+FROM hobby h, (
+	SELECT st.id, st_h.hobby_id, st.name, st.surname,
+		CASE
+			WHEN st_h.finished_at IS NULL THEN 'не занимается'
+			ELSE 'занимается'
+		END hobby_status
+	FROM student_hobby st_h
+	INNER JOIN student st ON st.id = st_h.student_id
+) pod
+WHERE h.id = pod.hobby_id
+
+№40
+SELECT st.n_group, 
+	COUNT(st.score) FILTER (WHERE ROUND(st.score) = '2') two,
+	COUNT(st.score) FILTER (WHERE ROUND(st.score) = '3') tree,
+	COUNT(st.score) FILTER (WHERE ROUND(st.score) = '4') four,
+	COUNT(st.score) FILTER (WHERE ROUND(st.score) = '5') five
+FROM student st
+GROUP BY st.n_group
